@@ -1,138 +1,89 @@
 # Word Games Hub & Equal-Weight Leaderboard
 
-A real-time multiplayer daily word game tracking platform (Wordle, Word500, Krillion, Connections, Contexto, and custom daily games) where every game is deterministically normalized to a **0.00–100.00 scale** so every game carries equal weight.
-
-Built with **Next.js 15 (App Router, TypeScript)**, **Tailwind CSS (WCAG 2.1 AA Okabe-Ito High-Contrast Palette)**, **Framer Motion**, and **Supabase (PostgreSQL + Auth + Realtime CDC)** with a built-in **Local Hybrid Demo Store** so it runs 100% interactively even before creating a Supabase account.
+A real-time multiplayer daily word game tracking platform where friend groups asynchronously log their daily results across disparate word and trivia games (**Wordle**, **Word500**, **Krillion**, **Connections**, **Contexto**) and compete on dynamically recalculated **Daily** and **All-Time** leaderboards where every game carries equal weight.
 
 ---
 
-## Quick Start (Run Locally in 30 Seconds — No Accounts Needed!)
+## Core Engineering: The Equal-Weight Normalization Engine
 
-Because of the built-in **Hybrid Adapter** (`src/lib/supabase/repository.ts`), you can run and test the entire app immediately on your computer before setting up Supabase or Vercel.
+Different word games measure success using incompatible scales and directions. Every raw score is converted on write (via a deterministic PostgreSQL `BEFORE INSERT OR UPDATE` trigger and shared TypeScript validator) to a standardized **0.00–100.00 scale**:
 
-### 1. Open your terminal in the project folder
-```bash
-cd /home/hamdaan_mirza/game_leaderboard_website
+| Game | Metric / Direction | Raw Range | Formula / Mapping | Normalized Score |
+| :--- | :--- | :--- | :--- | :--- |
+| **Wordle** | Attempts (Lower is Better) | `1–6` Tries | Step Scale (`100, 90, 80, 65, 50, 35`) | `35.00 – 100.00` |
+| **Wordle (Failed)** | Unsolved | `X` | Flat Participation Credit | `10.00` |
+| **Word500** | Attempts (Lower is Better) | `1–8` Tries | $100 - ((\text{attempts} - 1) \times 11)$ | `23.00 – 100.00` |
+| **Word500 (Failed)** | Unsolved | `X` | Flat Participation Credit | `10.00` |
+| **Krillion** | Points (Higher is Better) | `0–700` Pts | $\text{ROUND}((\text{raw\_score} / 700.0) \times 100, 2)$ | `0.00 – 100.00` |
+| **Custom Games** | Configurable (`ATTEMPTS` / `POINTS`) | `min..max` | Linear interpolation on `0.00–100.00` scale | `0.00 – 100.00` |
+
+### Asynchronous Fairness & Metrics
+- **Daily Standings**: Ranks players using PostgreSQL `DENSE_RANK() OVER (PARTITION BY play_date, group_id ORDER BY SUM(normalized_score) DESC, COUNT(game_id) DESC)` alongside **Average Score Per Game Played** so players who have only finished 1 of 3 games by midday can still compare efficiency fairly.
+- **All-Time Hall of Fame**: Tracks **Cumulative Normalized Points**, **Career Mean Score per Game**, **Win Rate %**, **Completed-Day Crowns Won**, **Active Streaks**, and **Per-Game Specialty Badges**.
+- **Same-Day Edit Window & Audit Trail**: Players can fix typos before `00:00:00` local time (`Africa/Johannesburg` SAST default); every update is recorded via an `AFTER UPDATE` audit trigger.
+
+---
+
+## Key Features
+
+- **Quick-Tap Game Bento Grid**: 1-tap `48x48px` pill buttons for attempt-based games (no mobile keyboard required) and live normalized point previews for points-based games.
+- **Zero-Spoiler Share-Text Auto-Parser**: Extracts puzzle numbers and scores directly from pasted Wordle, Word500, and Krillion share blocks while immediately discarding emoji grids in memory.
+- **Realtime Leaderboard Shifts**: Powered by Supabase Realtime Change Data Capture (CDC) over WebSockets with Framer Motion layout animations (`prefers-reduced-motion` respected).
+- **Dynamic Admin Game Registry**: Group admins can register or toggle new daily games (`scoring_type`, `min_score`, `max_score`) without code changes.
+- **WCAG 2.1 AA / AAA Accessibility**:
+  - **Typography**: **Atkinson Hyperlegible** & **Inter** paired with **JetBrains Mono** (`font-variant-numeric: tabular-nums`), strict `16px` minimum body text, `18px` mobile numeric inputs, and `48x48px` minimum touch targets.
+  - **Complementary Dark & Light Palette**: Built around `#0D1321` (Midnight Navy), `#1D2D44` (Prussian Blue), `#3E5C76` (Paynes Steel), `#748CAB` (Shadow Slate), and `#F0EBD8` (Warm Eggshell) paired with colorblind-safe Okabe-Ito status badges and explicit directional icons (`▲ +2`, `▼ -1`, `✓ Done`).
+
+---
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 (App Router, TypeScript), React 19, Tailwind CSS, Framer Motion, Lucide Icons
+- **Backend & Database**: PostgreSQL (Supabase), Row-Level Security (RLS), PL/pgSQL Triggers & Window Views, Supabase Realtime WebSockets
+- **Testing**: Vitest (Unit & End-to-End Repository Test Suites)
+
+---
+
+## Project Structure
+
+```text
+├── docs/                       # Architecture specification & implementation docs
+├── supabase/
+│   ├── schema.sql              # Tables, views, BEFORE/AFTER triggers, RLS, Realtime DDL
+│   └── seed.sql                # Core games (Wordle, Word500, Krillion) & default group seed
+├── src/
+│   ├── app/                    # Next.js 15 App Router pages (/, /leaderboard, /admin, /login)
+│   ├── components/
+│   │   ├── admin/              # Dynamic game registry configuration form
+│   │   ├── games/              # Bento grid, AttemptCard, PointsCard, ShareTextParser
+│   │   ├── leaderboard/        # DailyStandings, AllTimeHall, AuditHistory
+│   │   └── navigation/         # Persistent header, SAST reset timer & theme switcher
+│   ├── lib/
+│   │   ├── normalization.ts    # Deterministic 0-100 normalization & anti-cheat engine
+│   │   ├── share-parser.ts     # Regex share-block parser with spoiler stripping
+│   │   ├── timezone.ts         # Africa/Johannesburg (SAST / GMT+2) cutoff utilities
+│   │   └── supabase/           # Supabase client & hybrid repository adapter
+│   └── types/                  # TypeScript domain interfaces
+└── tests/                      # Automated unit & integration tests
 ```
 
-### 2. Install dependencies (if not already installed)
+---
+
+## Local Development
+
 ```bash
+# Install dependencies
 npm install
-```
 
-### 3. Start the development server
-> **Tip:** If you ever had an old build cache, run `rm -rf .next` before starting.
-```bash
+# Copy environment variables template
+cp .env.example .env.local
+
+# Run development server (http://localhost:3000)
 npm run dev
-```
 
-### 4. Open in your browser
-Visit **[http://localhost:3000](http://localhost:3000)**
-
-### What to Try Locally in Interactive Demo Mode:
-1. **Quick-Tap Score Entry (`/`)**:
-   - Tap a pill button (`1`–`6` or `X`) on **Wordle** or (`1`–`8` or `X`) on **Word500** — no keyboard required!
-   - Type `325` into the **Krillion** card to see the live preview (`= 46.43 normalized pts (3,250m)`) and click **Save**.
-   - Watch the **Daily Standings** table immediately animate your rank shift (`▲ +2`).
-2. **Share-Text Auto-Parser (`/`)**:
-   - Click **"Manual Paste / Demo Samples"** in the Share-Text Auto-Parser bar and click **"Test Wordle 1,234 (3/6*)"** to see it extract the score and strip emoji spoilers.
-3. **Simulate Live Friend Scores (`/`)**:
-   - Click the **"Simulate Friend Score"** button at the top right of the Daily Standings table to simulate a friend submitting a score over WebSockets/BroadcastChannel.
-4. **Switch Active Player Persona (Top Bar)**:
-   - Use the **"Playing as: You (Alex)"** dropdown in the top navigation bar to switch to `Thabo M.`, `Naledi K.`, `Liam V.`, or `Zanele D.`.
-5. **Edit & Audit Trail (`/`)**:
-   - Click **"Edit Score"** on any completed card today, pick a new score, and scroll down to the **Same-Day Edit Audit Trail** to see the old vs. new score recorded.
-6. **Add Custom Games (`/admin`)**:
-   - Visit `/admin` and click **"+ Preset: Connections"** or **"+ Preset: Contexto"** to register a new daily game dynamically without code changes.
-
----
-
-## Step-by-Step Guide: Setting Up Supabase (100% Free Tier)
-
-When you are ready to connect a real cloud database so your friends can log in from their own phones, follow these steps:
-
-### Step 1: Create a Free Supabase Account & Project
-1. Go to **[https://supabase.com](https://supabase.com)** and click **Start your project**.
-2. Sign up for free (using GitHub or your email — no credit card required).
-3. Click **New Project**:
-   - **Name**: `word-games-leaderboard`
-   - **Database Password**: Generate a strong password and save it.
-   - **Region**: Choose the region closest to your friend group (e.g., Europe / EU Central or AWS Cape Town if available).
-   - Click **Create new project** and wait ~60 seconds for the database to finish provisioning.
-
-### Step 2: Run the Database Schema & Seed SQL
-1. In your Supabase project dashboard, look at the left sidebar and click **SQL Editor** (the `>_` icon).
-2. Click **+ New query**.
-3. Open [`supabase/schema.sql`](./supabase/schema.sql) from this project, copy the entire file contents, paste it into the Supabase SQL Editor, and click **Run** (bottom right).
-   - *This creates all tables (`profiles`, `groups`, `group_members`, `games`, `submissions`, `submission_audit_logs`), the `BEFORE`/`AFTER` normalization & audit triggers, the `daily_leaderboard` and `all_time_leaderboard` views, RLS security policies, and Realtime WebSockets.*
-4. Click **+ New query** again in the Supabase SQL Editor.
-5. Open [`supabase/seed.sql`](./supabase/seed.sql), copy its contents, paste it into the editor, and click **Run**.
-   - *This seeds **Wordle**, **Word500**, **Krillion**, and your default friend group (`WORDS2026`, timezone `Africa/Johannesburg`).*
-
-### Step 3: Copy Your Supabase API Keys into `.env.local`
-1. In the Supabase dashboard left sidebar, click **Project Settings** (the gear icon at the bottom) → **API**.
-2. Copy the **Project URL** and the **`anon` `public` key**.
-3. In your project folder, create a file named `.env.local` (or copy `.env.example` to `.env.local`):
-   ```bash
-   cp .env.example .env.local
-   ```
-4. Paste your keys into `.env.local`:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-   NEXT_PUBLIC_DEFAULT_GROUP_CODE=WORDS2026
-   NEXT_PUBLIC_DEFAULT_TIMEZONE=Africa/Johannesburg
-   ```
-5. Restart `npm run dev` — the top badge will automatically switch from **"Interactive Demo Mode"** to **"Supabase Live"**!
-
----
-
-## Step-by-Step Guide: Hosting on Vercel for Free
-
-**Vercel** is the official creator of Next.js and hosts Next.js 15 apps for free with automatic HTTPS and a public shareable link.
-
-### Step 1: Push Your Code to GitHub
-1. Create a free account at **[https://github.com](https://github.com)** if you don't have one.
-2. Click the **+** icon in the top-right corner of GitHub → **New repository**.
-3. Name it `word-games-leaderboard`, set it to **Private** (or Public), and click **Create repository**.
-4. In your project terminal, commit and push your code:
-   ```bash
-   git add .
-   git commit -m "Initial full-stack Word Games Hub & Leaderboard"
-   git branch -M main
-   git remote add origin https://github.com/<your-github-username>/word-games-leaderboard.git
-   git push -u origin main
-   ```
-
-### Step 2: Deploy to Vercel
-1. Go to **[https://vercel.com](https://vercel.com)** and click **Sign Up** → **Continue with GitHub**.
-2. Once logged in, click **Add New...** → **Project**.
-3. Find your `word-games-leaderboard` repository and click **Import**.
-4. Expand the **Environment Variables** section and add your keys (if using Supabase; if you want to deploy the Interactive Demo Mode first, you can leave them blank!):
-   - `NEXT_PUBLIC_SUPABASE_URL` = *(your Supabase Project URL)*
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = *(your Supabase anon public key)*
-   - `NEXT_PUBLIC_DEFAULT_GROUP_CODE` = `WORDS2026`
-   - `NEXT_PUBLIC_DEFAULT_TIMEZONE` = `Africa/Johannesburg`
-5. Click **Deploy**.
-6. In ~60 seconds, Vercel will give you your live URL (e.g., `https://word-games-leaderboard.vercel.app`).
-
-### Step 3: Add Your Vercel URL to Supabase Auth (For Magic Links)
-1. Once you have your Vercel URL, go back to your **Supabase Dashboard** → **Authentication** → **URL Configuration**.
-2. Set **Site URL** to your Vercel URL (e.g., `https://word-games-leaderboard.vercel.app`).
-3. Share the URL and invite code (`WORDS2026`) with your friend group on WhatsApp/Telegram!
-
----
-
-## Running Automated Tests & Production Builds
-
-```bash
-# Run the 15 automated unit & end-to-end repository tests
+# Run automated test suites
 npm test
 
-# Build for production
+# Create production build
 npm run build
-
-# Start production server locally
-npm start
 ```
-
