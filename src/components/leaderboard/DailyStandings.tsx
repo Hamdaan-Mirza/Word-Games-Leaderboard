@@ -218,7 +218,7 @@ export function DailyStandings({
                         <span className="inline-flex items-center gap-1 rounded-md bg-wcag-success px-2.5 py-1 font-mono text-xs font-bold text-white tabular-nums">
                           <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                           <span>
-                            ✓ Done ({row.games_played}/{row.total_active_games})
+                            Done ({row.games_played}/{row.total_active_games})
                           </span>
                         </span>
                       ) : (

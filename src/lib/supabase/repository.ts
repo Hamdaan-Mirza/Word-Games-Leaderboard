@@ -14,12 +14,12 @@ import { DEFAULT_TIMEZONE, getLocalDateString, getOffsetDateString } from "@/lib
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "./client";
 
 const STORAGE_KEYS = {
-  GAMES: "wgl_games_v1",
-  SUBMISSIONS: "wgl_submissions_v1",
-  AUDIT_LOGS: "wgl_audit_logs_v1",
-  PROFILES: "wgl_profiles_v1",
-  CURRENT_USER: "wgl_current_user_v1",
-  GROUP: "wgl_group_v1",
+  GAMES: "wgl_games_v2",
+  SUBMISSIONS: "wgl_submissions_v2",
+  AUDIT_LOGS: "wgl_audit_logs_v2",
+  PROFILES: "wgl_profiles_v2",
+  CURRENT_USER: "wgl_current_user_v2",
+  GROUP: "wgl_group_v2",
 };
 
 const BROADCAST_CHANNEL_NAME = "word_games_realtime_cdc";
@@ -212,6 +212,16 @@ function buildInitialSeedSubmissions(): Submission[] {
 function ensureLocalStoreInitialized(): void {
   if (typeof window === "undefined") return;
 
+  // Automatically purge legacy v1 demo keys so Naledi/Thabo/Liam/Zanele are removed
+  [
+    "wgl_games_v1",
+    "wgl_submissions_v1",
+    "wgl_audit_logs_v1",
+    "wgl_profiles_v1",
+    "wgl_current_user_v1",
+    "wgl_group_v1",
+  ].forEach((legacyKey) => localStorage.removeItem(legacyKey));
+
   if (!localStorage.getItem(STORAGE_KEYS.GROUP)) {
     localStorage.setItem(STORAGE_KEYS.GROUP, JSON.stringify(DEFAULT_GROUP));
   }
@@ -219,16 +229,13 @@ function ensureLocalStoreInitialized(): void {
     localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify(SEED_GAMES));
   }
   if (!localStorage.getItem(STORAGE_KEYS.PROFILES)) {
-    localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(SEED_PROFILES));
+    localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify([SEED_PROFILES[0]]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.CURRENT_USER)) {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(SEED_PROFILES[0]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.SUBMISSIONS)) {
-    localStorage.setItem(
-      STORAGE_KEYS.SUBMISSIONS,
-      JSON.stringify(buildInitialSeedSubmissions())
-    );
+    localStorage.setItem(STORAGE_KEYS.SUBMISSIONS, JSON.stringify([]));
   }
   if (!localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS)) {
     localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify([]));
@@ -359,8 +366,36 @@ export async function updateCurrentUserProfile(updates: {
 
 export async function getAllProfiles(): Promise<UserProfile[]> {
   ensureLocalStoreInitialized();
-  if (typeof window === "undefined") return SEED_PROFILES;
-  return JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILES) || "[]") as UserProfile[];
+  if (typeof window === "undefined") return [SEED_PROFILES[0]];
+  const localProfiles = JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.PROFILES) || "[]"
+  ) as UserProfile[];
+
+  const sb = getSupabaseBrowserClient();
+  if (sb) {
+    try {
+      const { data: remoteProfiles } = await sb.from("profiles").select("*");
+      if (remoteProfiles && remoteProfiles.length > 0) {
+        const map = new Map<string, UserProfile>();
+        for (const lp of localProfiles) map.set(lp.id, lp);
+        for (const rp of remoteProfiles) {
+          map.set(rp.id, {
+            id: rp.id,
+            display_name: rp.display_name || "Player",
+            avatar_color: rp.avatar_color || "#1D2D44",
+            group_id: DEFAULT_GROUP.id,
+            invite_code: DEFAULT_GROUP.invite_code,
+            role: "member",
+          });
+        }
+        return Array.from(map.values());
+      }
+    } catch {
+      // Fallback to local
+    }
+  }
+
+  return localProfiles;
 }
 
 export async function switchDemoPersona(userId: string): Promise<UserProfile> {
@@ -994,7 +1029,10 @@ export async function simulateFriendLiveSubmission(): Promise<{
   const games = await getGames(false);
   const profiles = await getAllProfiles();
   const currentUser = await getCurrentUser();
-  const friends = profiles.filter((p) => p.id !== currentUser.id);
+  const friends =
+    profiles.filter((p) => p.id !== currentUser.id).length > 0
+      ? profiles.filter((p) => p.id !== currentUser.id)
+      : SEED_PROFILES.slice(1);
   const subs = JSON.parse(
     localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
   ) as Submission[];
@@ -1053,6 +1091,17 @@ export async function resetDemoData(): Promise<void> {
   Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
   ensureLocalStoreInitialized();
   broadcastLocalChange("demo_reset");
+}
+
+export async function seedSampleFriends(): Promise<void> {
+  if (typeof window === "undefined") return;
+  ensureLocalStoreInitialized();
+  localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(SEED_PROFILES));
+  localStorage.setItem(
+    STORAGE_KEYS.SUBMISSIONS,
+    JSON.stringify(buildInitialSeedSubmissions())
+  );
+  broadcastLocalChange("demo_seeded");
 }
 
 const realtimeSubscribers = new Set<() => void>();

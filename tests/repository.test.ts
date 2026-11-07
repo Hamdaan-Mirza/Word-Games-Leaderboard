@@ -11,6 +11,7 @@ import {
   getUserSubmissionsForDate,
   resetDemoData,
   SEED_GAMES,
+  seedSampleFriends,
   simulateFriendLiveSubmission,
   submitScore,
   subscribeToLeaderboardUpdates,
@@ -53,6 +54,15 @@ describe("End-to-End Repository & Leaderboard Flows", () => {
       writable: true,
     });
     await resetDemoData();
+    await seedSampleFriends();
+  });
+
+  it("starts with zero fake users when resetDemoData is called", async () => {
+    await resetDemoData();
+    const daily = await getDailyLeaderboard();
+    expect(daily.length).toBe(0);
+    const allTime = await getAllTimeLeaderboard();
+    expect(allTime.length).toBe(0);
   });
 
   it("initializes group, profiles, games, and current user properly", async () => {
