@@ -15,7 +15,6 @@ interface DailyStandingsProps {
   onSelectDate: (date: string) => void;
   rankChangeDeltas: Record<string, number>; // positive = moved up (e.g. +2), negative = moved down (-1)
   liveAnnouncement: string;
-  onSimulateFriend?: () => void;
 }
 
 export function DailyStandings({
@@ -27,7 +26,6 @@ export function DailyStandings({
   onSelectDate,
   rankChangeDeltas,
   liveAnnouncement,
-  onSimulateFriend,
 }: DailyStandingsProps) {
   const prefersReducedMotion = useReducedMotion();
 
@@ -82,18 +80,6 @@ export function DailyStandings({
               ))}
             </select>
           </div>
-
-          {onSimulateFriend && (
-            <button
-              type="button"
-              onClick={onSimulateFriend}
-              className="inline-flex min-h-[48px] items-center gap-2 rounded-lg border-2 border-palette-shadow bg-wcag-accent px-3.5 py-2 text-sm font-bold text-wcag-accentText hover:bg-wcag-accentHover"
-              title="Simulate a friend submitting a game over WebSocket / BroadcastChannel"
-            >
-              <Radio className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Simulate Friend Score</span>
-            </button>
-          )}
         </div>
       </div>
 

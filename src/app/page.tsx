@@ -17,7 +17,6 @@ import {
   getDailyLeaderboard,
   getGames,
   getUserSubmissionsForDate,
-  simulateFriendLiveSubmission,
   submitScore,
   subscribeToLeaderboardUpdates,
 } from "@/lib/supabase/repository";
@@ -138,15 +137,6 @@ export default function DashboardPage() {
     return { success: res.success, error: res.error };
   };
 
-  const handleSimulateFriend = async () => {
-    const sim = await simulateFriendLiveSubmission();
-    await refreshData(
-      `Live update: ${sim.friendName} logged ${sim.gameName} (+${sim.normalizedScore.toFixed(
-        2
-      )} pts)!`
-    );
-  };
-
   const isPastDate = selectedDate < todaySast;
 
   return (
@@ -230,9 +220,6 @@ export default function DashboardPage() {
             onSelectDate={setSelectedDate}
             rankChangeDeltas={rankDeltas}
             liveAnnouncement={liveAnnouncement}
-            onSimulateFriend={
-              selectedDate === todaySast ? handleSimulateFriend : undefined
-            }
           />
         ) : (
           <AllTimeHall

@@ -14,12 +14,12 @@ import { DEFAULT_TIMEZONE, getLocalDateString, getOffsetDateString } from "@/lib
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "./client";
 
 const STORAGE_KEYS = {
-  GAMES: "wgl_games_v2",
-  SUBMISSIONS: "wgl_submissions_v2",
-  AUDIT_LOGS: "wgl_audit_logs_v2",
-  PROFILES: "wgl_profiles_v2",
-  CURRENT_USER: "wgl_current_user_v2",
-  GROUP: "wgl_group_v2",
+  GAMES: "wgl_games_v3",
+  SUBMISSIONS: "wgl_submissions_v3",
+  AUDIT_LOGS: "wgl_audit_logs_v3",
+  PROFILES: "wgl_profiles_v3",
+  CURRENT_USER: "wgl_current_user_v3",
+  GROUP: "wgl_group_v3",
 };
 
 const BROADCAST_CHANNEL_NAME = "word_games_realtime_cdc";
@@ -64,11 +64,12 @@ export const SEED_GAMES: GameConfig[] = [
   },
 ];
 
+// Used only for offline automated unit tests
 export const SEED_PROFILES: UserProfile[] = [
   {
     id: "u0000000-0000-0000-0000-000000000001",
-    display_name: "You (Alex)",
-    avatar_color: "#1D4ED8", // Blue 700
+    display_name: "Player 1",
+    avatar_color: "#1D2D44",
     group_id: DEFAULT_GROUP.id,
     invite_code: DEFAULT_GROUP.invite_code,
     role: "admin",
@@ -76,7 +77,7 @@ export const SEED_PROFILES: UserProfile[] = [
   {
     id: "u0000000-0000-0000-0000-000000000002",
     display_name: "Thabo M.",
-    avatar_color: "#047857", // Emerald 700
+    avatar_color: "#047857",
     group_id: DEFAULT_GROUP.id,
     invite_code: DEFAULT_GROUP.invite_code,
     role: "member",
@@ -84,7 +85,7 @@ export const SEED_PROFILES: UserProfile[] = [
   {
     id: "u0000000-0000-0000-0000-000000000003",
     display_name: "Naledi K.",
-    avatar_color: "#B45309", // Amber 700
+    avatar_color: "#B45309",
     group_id: DEFAULT_GROUP.id,
     invite_code: DEFAULT_GROUP.invite_code,
     role: "member",
@@ -92,7 +93,7 @@ export const SEED_PROFILES: UserProfile[] = [
   {
     id: "u0000000-0000-0000-0000-000000000004",
     display_name: "Liam V.",
-    avatar_color: "#6D28D9", // Violet 700
+    avatar_color: "#3E5C76",
     group_id: DEFAULT_GROUP.id,
     invite_code: DEFAULT_GROUP.invite_code,
     role: "member",
@@ -100,7 +101,7 @@ export const SEED_PROFILES: UserProfile[] = [
   {
     id: "u0000000-0000-0000-0000-000000000005",
     display_name: "Zanele D.",
-    avatar_color: "#BE123C", // Rose 700
+    avatar_color: "#BE123C",
     group_id: DEFAULT_GROUP.id,
     invite_code: DEFAULT_GROUP.invite_code,
     role: "member",
@@ -124,73 +125,53 @@ function buildInitialSeedSubmissions(): Submission[] {
     raw_score: number | null;
     is_failed: boolean;
   }> = [
-    // --- 3 Days Ago (Completed Day) ---
     { user_id: SEED_PROFILES[0].id, game: wordle, play_date: dayMinus3, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[0].id, game: word500, play_date: dayMinus3, raw_score: 4, is_failed: false },
     { user_id: SEED_PROFILES[0].id, game: krillion, play_date: dayMinus3, raw_score: 510, is_failed: false },
-
     { user_id: SEED_PROFILES[1].id, game: wordle, play_date: dayMinus3, raw_score: 4, is_failed: false },
     { user_id: SEED_PROFILES[1].id, game: word500, play_date: dayMinus3, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[1].id, game: krillion, play_date: dayMinus3, raw_score: 480, is_failed: false },
-
     { user_id: SEED_PROFILES[2].id, game: wordle, play_date: dayMinus3, raw_score: 2, is_failed: false },
     { user_id: SEED_PROFILES[2].id, game: word500, play_date: dayMinus3, raw_score: 5, is_failed: false },
     { user_id: SEED_PROFILES[2].id, game: krillion, play_date: dayMinus3, raw_score: 420, is_failed: false },
 
-    // --- 2 Days Ago (Completed Day) ---
     { user_id: SEED_PROFILES[0].id, game: wordle, play_date: dayMinus2, raw_score: 4, is_failed: false },
     { user_id: SEED_PROFILES[0].id, game: word500, play_date: dayMinus2, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[0].id, game: krillion, play_date: dayMinus2, raw_score: 540, is_failed: false },
-
     { user_id: SEED_PROFILES[1].id, game: wordle, play_date: dayMinus2, raw_score: 2, is_failed: false },
     { user_id: SEED_PROFILES[1].id, game: word500, play_date: dayMinus2, raw_score: 2, is_failed: false },
     { user_id: SEED_PROFILES[1].id, game: krillion, play_date: dayMinus2, raw_score: 610, is_failed: false },
-
     { user_id: SEED_PROFILES[2].id, game: wordle, play_date: dayMinus2, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[2].id, game: word500, play_date: dayMinus2, raw_score: 4, is_failed: false },
     { user_id: SEED_PROFILES[2].id, game: krillion, play_date: dayMinus2, raw_score: 495, is_failed: false },
-
     { user_id: SEED_PROFILES[3].id, game: wordle, play_date: dayMinus2, raw_score: 5, is_failed: false },
     { user_id: SEED_PROFILES[3].id, game: word500, play_date: dayMinus2, raw_score: null, is_failed: true },
     { user_id: SEED_PROFILES[3].id, game: krillion, play_date: dayMinus2, raw_score: 390, is_failed: false },
 
-    // --- Yesterday (Completed Day) ---
     { user_id: SEED_PROFILES[0].id, game: wordle, play_date: dayMinus1, raw_score: 2, is_failed: false },
     { user_id: SEED_PROFILES[0].id, game: word500, play_date: dayMinus1, raw_score: 2, is_failed: false },
     { user_id: SEED_PROFILES[0].id, game: krillion, play_date: dayMinus1, raw_score: 630, is_failed: false },
-
     { user_id: SEED_PROFILES[1].id, game: wordle, play_date: dayMinus1, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[1].id, game: word500, play_date: dayMinus1, raw_score: 4, is_failed: false },
     { user_id: SEED_PROFILES[1].id, game: krillion, play_date: dayMinus1, raw_score: 525, is_failed: false },
-
     { user_id: SEED_PROFILES[2].id, game: wordle, play_date: dayMinus1, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[2].id, game: word500, play_date: dayMinus1, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[2].id, game: krillion, play_date: dayMinus1, raw_score: 645, is_failed: false },
-
     { user_id: SEED_PROFILES[3].id, game: wordle, play_date: dayMinus1, raw_score: 4, is_failed: false },
     { user_id: SEED_PROFILES[3].id, game: word500, play_date: dayMinus1, raw_score: 5, is_failed: false },
     { user_id: SEED_PROFILES[3].id, game: krillion, play_date: dayMinus1, raw_score: 470, is_failed: false },
-
     { user_id: SEED_PROFILES[4].id, game: wordle, play_date: dayMinus1, raw_score: 3, is_failed: false },
     { user_id: SEED_PROFILES[4].id, game: word500, play_date: dayMinus1, raw_score: 6, is_failed: false },
     { user_id: SEED_PROFILES[4].id, game: krillion, play_date: dayMinus1, raw_score: 505, is_failed: false },
 
-    // --- Today (Asynchronous Partial & Full Friend Submissions) ---
-    // Thabo M. has completed 2 of 3 games (146.71 pts)
-    { user_id: SEED_PROFILES[1].id, game: wordle, play_date: today, raw_score: 3, is_failed: false }, // 80.00
-    { user_id: SEED_PROFILES[1].id, game: krillion, play_date: today, raw_score: 467, is_failed: false }, // 66.71
-
-    // Naledi K. has completed all 3 games (225.86 pts)
-    { user_id: SEED_PROFILES[2].id, game: wordle, play_date: today, raw_score: 3, is_failed: false }, // 80.00
-    { user_id: SEED_PROFILES[2].id, game: word500, play_date: today, raw_score: 4, is_failed: false }, // 67.00
-    { user_id: SEED_PROFILES[2].id, game: krillion, play_date: today, raw_score: 552, is_failed: false }, // 78.86
-
-    // Liam V. has completed 2 of 3 games (121.00 pts)
-    { user_id: SEED_PROFILES[3].id, game: wordle, play_date: today, raw_score: 4, is_failed: false }, // 65.00
-    { user_id: SEED_PROFILES[3].id, game: word500, play_date: today, raw_score: 5, is_failed: false }, // 56.00
-
-    // Zanele D. has completed 1 of 3 games (89.00 pts)
-    { user_id: SEED_PROFILES[4].id, game: word500, play_date: today, raw_score: 2, is_failed: false }, // 89.00
+    { user_id: SEED_PROFILES[1].id, game: wordle, play_date: today, raw_score: 3, is_failed: false },
+    { user_id: SEED_PROFILES[1].id, game: krillion, play_date: today, raw_score: 467, is_failed: false },
+    { user_id: SEED_PROFILES[2].id, game: wordle, play_date: today, raw_score: 3, is_failed: false },
+    { user_id: SEED_PROFILES[2].id, game: word500, play_date: today, raw_score: 4, is_failed: false },
+    { user_id: SEED_PROFILES[2].id, game: krillion, play_date: today, raw_score: 552, is_failed: false },
+    { user_id: SEED_PROFILES[3].id, game: wordle, play_date: today, raw_score: 4, is_failed: false },
+    { user_id: SEED_PROFILES[3].id, game: word500, play_date: today, raw_score: 5, is_failed: false },
+    { user_id: SEED_PROFILES[4].id, game: word500, play_date: today, raw_score: 2, is_failed: false },
   ];
 
   return rows.map((r, idx) => {
@@ -212,7 +193,7 @@ function buildInitialSeedSubmissions(): Submission[] {
 function ensureLocalStoreInitialized(): void {
   if (typeof window === "undefined") return;
 
-  // Automatically purge legacy v1 demo keys so Naledi/Thabo/Liam/Zanele are removed
+  // Purge all legacy v1 and v2 demo keys (including "You (Alex)" and simulated scores)
   [
     "wgl_games_v1",
     "wgl_submissions_v1",
@@ -220,6 +201,12 @@ function ensureLocalStoreInitialized(): void {
     "wgl_profiles_v1",
     "wgl_current_user_v1",
     "wgl_group_v1",
+    "wgl_games_v2",
+    "wgl_submissions_v2",
+    "wgl_audit_logs_v2",
+    "wgl_profiles_v2",
+    "wgl_current_user_v2",
+    "wgl_group_v2",
   ].forEach((legacyKey) => localStorage.removeItem(legacyKey));
 
   if (!localStorage.getItem(STORAGE_KEYS.GROUP)) {
@@ -251,13 +238,38 @@ function broadcastLocalChange(eventType: string): void {
       channel.postMessage({ eventType, timestamp: Date.now() });
       channel.close();
     } catch {
-      // Ignore BroadcastChannel errors in unsupported contexts
+      // Ignore BroadcastChannel errors
     }
   }
 }
 
+/**
+ * Resolves a human-readable display name from a Supabase auth user object
+ * (supports custom metadata, Google OAuth `full_name` / `name`, and email prefix).
+ */
+function extractAuthDisplayName(user: {
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+}): string {
+  const meta = user.user_metadata || {};
+  const candidates = [
+    meta.display_name,
+    meta.full_name,
+    meta.name,
+    meta.user_name,
+    meta.preferred_username,
+    user.email ? user.email.split("@")[0] : null,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim().length > 0) {
+      return c.trim();
+    }
+  }
+  return "Player";
+}
+
 // ============================================================================
-// Repository Public API (Works seamlessly with Supabase OR Local Hybrid Store)
+// Repository Public API
 // ============================================================================
 
 export async function getActiveGroup(): Promise<GroupInfo> {
@@ -271,7 +283,7 @@ export async function getActiveGroup(): Promise<GroupInfo> {
         .maybeSingle();
       if (data) return data as GroupInfo;
     } catch {
-      // Fallback to local store
+      // Fallback to default group
     }
   }
 
@@ -294,21 +306,38 @@ export async function getCurrentUser(): Promise<UserProfile> {
           .select("*")
           .eq("id", user.id)
           .maybeSingle();
+
+        const resolvedName =
+          profile?.display_name && profile.display_name !== "Player"
+            ? profile.display_name
+            : extractAuthDisplayName(user);
+        const resolvedColor =
+          profile?.avatar_color ||
+          (typeof user.user_metadata?.avatar_color === "string"
+            ? user.user_metadata.avatar_color
+            : "#1D2D44");
+
+        // Automatically sync the user's profile row into `profiles` if missing or outdated
+        if (!profile || profile.display_name !== resolvedName) {
+          await sb.from("profiles").upsert({
+            id: user.id,
+            display_name: resolvedName,
+            avatar_color: resolvedColor,
+            updated_at: new Date().toISOString(),
+          });
+        }
+
         return {
           id: user.id,
-          display_name:
-            profile?.display_name ||
-            user.user_metadata?.display_name ||
-            user.email?.split("@")[0] ||
-            "Player",
-          avatar_color: profile?.avatar_color || "#1D4ED8",
+          display_name: resolvedName,
+          avatar_color: resolvedColor,
           group_id: DEFAULT_GROUP.id,
           invite_code: DEFAULT_GROUP.invite_code,
           role: "admin",
         };
       }
     } catch {
-      // Fallback to local store
+      // Fallback if unauthenticated
     }
   }
 
@@ -324,24 +353,42 @@ export async function updateCurrentUserProfile(updates: {
   invite_code?: string;
 }): Promise<UserProfile> {
   const current = await getCurrentUser();
+  const cleanName = updates.display_name.trim() || current.display_name;
+  const cleanColor = updates.avatar_color || current.avatar_color;
+  const cleanCode = (updates.invite_code || current.invite_code).toUpperCase();
+
   const updated: UserProfile = {
     ...current,
-    display_name: updates.display_name.trim() || current.display_name,
-    avatar_color: updates.avatar_color || current.avatar_color,
-    invite_code: (updates.invite_code || current.invite_code).toUpperCase(),
+    display_name: cleanName,
+    avatar_color: cleanColor,
+    invite_code: cleanCode,
   };
 
   const sb = getSupabaseBrowserClient();
   if (sb) {
     try {
-      await sb.from("profiles").upsert({
-        id: updated.id,
-        display_name: updated.display_name,
-        avatar_color: updated.avatar_color,
-        updated_at: new Date().toISOString(),
-      });
+      const {
+        data: { user },
+      } = await sb.auth.getUser();
+      if (user) {
+        await Promise.all([
+          sb.from("profiles").upsert({
+            id: user.id,
+            display_name: cleanName,
+            avatar_color: cleanColor,
+            updated_at: new Date().toISOString(),
+          }),
+          sb.auth.updateUser({
+            data: {
+              display_name: cleanName,
+              avatar_color: cleanColor,
+              invite_code: cleanCode,
+            },
+          }),
+        ]);
+      }
     } catch {
-      // Ignore if unauthenticated in demo
+      // Ignore if unauthenticated
     }
   }
 
@@ -365,29 +412,43 @@ export async function updateCurrentUserProfile(updates: {
 }
 
 export async function getAllProfiles(): Promise<UserProfile[]> {
-  ensureLocalStoreInitialized();
-  if (typeof window === "undefined") return [SEED_PROFILES[0]];
-  const localProfiles = JSON.parse(
-    localStorage.getItem(STORAGE_KEYS.PROFILES) || "[]"
-  ) as UserProfile[];
-
   const sb = getSupabaseBrowserClient();
-  if (sb) {
+  if (sb && isSupabaseConfigured()) {
     try {
-      const { data: remoteProfiles } = await sb.from("profiles").select("*");
-      if (remoteProfiles && remoteProfiles.length > 0) {
-        const map = new Map<string, UserProfile>();
-        for (const lp of localProfiles) map.set(lp.id, lp);
+      const [{ data: remoteProfiles }, { data: viewRows }] = await Promise.all([
+        sb.from("profiles").select("*"),
+        sb.from("all_time_leaderboard").select("user_id, display_name, avatar_color, group_id"),
+      ]);
+
+      const map = new Map<string, UserProfile>();
+
+      if (viewRows) {
+        for (const vr of viewRows) {
+          map.set(vr.user_id, {
+            id: vr.user_id,
+            display_name: vr.display_name || "Player",
+            avatar_color: vr.avatar_color || "#1D2D44",
+            group_id: vr.group_id || DEFAULT_GROUP.id,
+            invite_code: DEFAULT_GROUP.invite_code,
+            role: "member",
+          });
+        }
+      }
+
+      if (remoteProfiles) {
         for (const rp of remoteProfiles) {
           map.set(rp.id, {
             id: rp.id,
-            display_name: rp.display_name || "Player",
+            display_name: rp.display_name || map.get(rp.id)?.display_name || "Player",
             avatar_color: rp.avatar_color || "#1D2D44",
             group_id: DEFAULT_GROUP.id,
             invite_code: DEFAULT_GROUP.invite_code,
             role: "member",
           });
         }
+      }
+
+      if (map.size > 0) {
         return Array.from(map.values());
       }
     } catch {
@@ -395,7 +456,9 @@ export async function getAllProfiles(): Promise<UserProfile[]> {
     }
   }
 
-  return localProfiles;
+  ensureLocalStoreInitialized();
+  if (typeof window === "undefined") return [SEED_PROFILES[0]];
+  return JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILES) || "[]") as UserProfile[];
 }
 
 export async function switchDemoPersona(userId: string): Promise<UserProfile> {
@@ -530,7 +593,6 @@ export async function submitScore(params: {
   const todaySast = getLocalDateString(new Date(), group.timezone);
   const targetDate = params.playDate || todaySast;
 
-  // Block edits to past dates after midnight cutoff (UC-05, FR-5)
   if (targetDate < todaySast) {
     return {
       success: false,
@@ -544,7 +606,6 @@ export async function submitScore(params: {
     return { success: false, error: "Selected game was not found in the registry." };
   }
 
-  // Deterministic Normalization & Anti-Cheat Validation (FR-4, FR-7, Refinement 4)
   const normResult = calculateNormalizedScore(game, params.rawScore, params.isFailed);
   if (!normResult.valid) {
     return { success: false, error: normResult.error };
@@ -554,13 +615,23 @@ export async function submitScore(params: {
   const effectiveUserId = params.userId || currentUser.id;
 
   const sb = getSupabaseBrowserClient();
-  if (sb) {
+  if (sb && isSupabaseConfigured()) {
+    const {
+      data: { user: authUser },
+    } = await sb.auth.getUser();
+    if (!authUser) {
+      return {
+        success: false,
+        error: "Please sign in on the Profile / Group page first to save scores to the live leaderboard.",
+      };
+    }
+
     const { data, error } = await sb
       .from("submissions")
       .upsert(
         {
           group_id: group.id,
-          user_id: effectiveUserId,
+          user_id: authUser.id,
           game_id: game.id,
           play_date: targetDate,
           raw_score: normResult.sanitizedRawScore,
@@ -572,12 +643,14 @@ export async function submitScore(params: {
       .select()
       .single();
 
-    if (!error && data) {
-      return { success: true, submission: data as Submission };
+    if (error) {
+      return { success: false, error: error.message };
     }
+    broadcastLocalChange("submission_upserted");
+    return { success: true, submission: data as Submission };
   }
 
-  // Local Hybrid Store Execution (Mirrors BEFORE + AFTER Triggers)
+  // Local Store Execution (only when Supabase is not configured)
   ensureLocalStoreInitialized();
   const submissions = JSON.parse(
     localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
@@ -606,7 +679,6 @@ export async function submitScore(params: {
     };
     submissions[existingIdx] = savedSubmission;
 
-    // Refinement 3: AFTER UPDATE Audit Trigger logic if score or failed state changed
     if (
       oldSub.raw_score !== savedSubmission.raw_score ||
       oldSub.is_failed !== savedSubmission.is_failed
@@ -659,16 +731,16 @@ export async function getUserSubmissionsForDate(
   playDate: string
 ): Promise<Submission[]> {
   const sb = getSupabaseBrowserClient();
-  if (sb) {
+  if (sb && isSupabaseConfigured()) {
     try {
       const { data } = await sb
         .from("submissions")
         .select("*")
         .eq("user_id", userId)
         .eq("play_date", playDate);
-      if (data && data.length > 0) return data as Submission[];
+      return (data as Submission[]) || [];
     } catch {
-      // Fallback to local
+      return [];
     }
   }
 
@@ -695,40 +767,63 @@ export async function getDailyLeaderboard(
   ensureLocalStoreInitialized();
   if (typeof window === "undefined") return [];
 
-  let submissions = JSON.parse(
-    localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
-  ) as Submission[];
-  const profiles = await getAllProfiles();
+  let daySubs: Submission[] = [];
+  const profileMap = new Map<string, { display_name: string; avatar_color: string }>();
 
   const sb = getSupabaseBrowserClient();
-  if (sb) {
+  if (sb && isSupabaseConfigured()) {
     try {
-      const { data: remoteSubs } = await sb
-        .from("submissions")
-        .select("*")
-        .eq("play_date", targetDate);
-      if (remoteSubs && remoteSubs.length > 0) {
-        const mergedMap = new Map<string, Submission>();
-        for (const s of submissions) {
-          mergedMap.set(`${s.user_id}_${s.game_id}_${s.play_date}`, s);
+      // Fetch purely from Supabase (never mix local demo users)
+      const [{ data: remoteSubs }, { data: viewRows }, { data: remoteProfiles }] =
+        await Promise.all([
+          sb.from("submissions").select("*").eq("play_date", targetDate),
+          sb.from("daily_leaderboard").select("*").eq("play_date", targetDate),
+          sb.from("profiles").select("*"),
+        ]);
+
+      daySubs = (remoteSubs as Submission[]) || [];
+
+      if (viewRows) {
+        for (const vr of viewRows) {
+          profileMap.set(vr.user_id, {
+            display_name: vr.display_name || "Player",
+            avatar_color: vr.avatar_color || "#1D2D44",
+          });
         }
-        for (const rs of remoteSubs as Submission[]) {
-          mergedMap.set(`${rs.user_id}_${rs.game_id}_${rs.play_date}`, rs);
+      }
+      if (remoteProfiles) {
+        for (const rp of remoteProfiles) {
+          if (rp.display_name) {
+            profileMap.set(rp.id, {
+              display_name: rp.display_name,
+              avatar_color: rp.avatar_color || "#1D2D44",
+            });
+          }
         }
-        submissions = Array.from(mergedMap.values());
       }
     } catch {
-      // Fallback to local submissions
+      daySubs = [];
+    }
+  } else {
+    const submissions = JSON.parse(
+      localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
+    ) as Submission[];
+    daySubs = submissions.filter((s) => s.play_date === targetDate);
+    const localProfiles = await getAllProfiles();
+    for (const lp of localProfiles) {
+      profileMap.set(lp.id, {
+        display_name: lp.display_name,
+        avatar_color: lp.avatar_color,
+      });
     }
   }
-
-  const daySubs = submissions.filter((s) => s.play_date === targetDate);
 
   // Group by user_id
   const userMap = new Map<
     string,
     {
-      profile: UserProfile;
+      display_name: string;
+      avatar_color: string;
       subs: Submission[];
     }
   >();
@@ -738,21 +833,21 @@ export async function getDailyLeaderboard(
     if (existing) {
       existing.subs.push(sub);
     } else {
-      const profile = profiles.find((p) => p.id === sub.user_id) || {
-        id: sub.user_id,
+      const pInfo = profileMap.get(sub.user_id) || {
         display_name: "Player",
-        avatar_color: "#1D4ED8",
-        group_id: group.id,
-        invite_code: group.invite_code,
-        role: "member",
+        avatar_color: "#1D2D44",
       };
-      userMap.set(sub.user_id, { profile, subs: [sub] });
+      userMap.set(sub.user_id, {
+        display_name: pInfo.display_name,
+        avatar_color: pInfo.avatar_color,
+        subs: [sub],
+      });
     }
   }
 
   const unrankedRows: Omit<DailyLeaderboardRow, "daily_rank">[] = [];
 
-  for (const [userId, { profile, subs }] of userMap.entries()) {
+  for (const [userId, { display_name, avatar_color, subs }] of userMap.entries()) {
     const gamesPlayed = subs.length;
     const totalDailyScore = Number(
       subs.reduce((acc, s) => acc + Number(s.normalized_score), 0).toFixed(2)
@@ -773,8 +868,8 @@ export async function getDailyLeaderboard(
       play_date: targetDate,
       group_id: group.id,
       user_id: userId,
-      display_name: profile.display_name,
-      avatar_color: profile.avatar_color,
+      display_name,
+      avatar_color,
       games_played: gamesPlayed,
       total_active_games: totalActiveGames,
       total_daily_score: totalDailyScore,
@@ -783,7 +878,6 @@ export async function getDailyLeaderboard(
     });
   }
 
-  // Sort by total_daily_score DESC, then games_played DESC, then display_name ASC
   unrankedRows.sort((a, b) => {
     if (b.total_daily_score !== a.total_daily_score) {
       return b.total_daily_score - a.total_daily_score;
@@ -794,7 +888,6 @@ export async function getDailyLeaderboard(
     return a.display_name.localeCompare(b.display_name);
   });
 
-  // Apply DENSE_RANK() OVER (ORDER BY total_daily_score DESC, games_played DESC)
   let currentRank = 0;
   let lastScore: number | null = null;
   let lastCount: number | null = null;
@@ -814,14 +907,8 @@ export async function getDailyLeaderboard(
 
 /**
  * Computes the All-Time Hall of Fame Leaderboard (FR-6, UC-04, Refinement 2)
- * - Total Normalized Points
- * - Career Average Score per Game Played
- * - Win Rate % (non-failed games)
- * - Daily Crowns Won (STRICTLY for completed days: play_date < today_sast)
- * - Active Streak (consecutive days up to today/yesterday)
- * - Per-Game Specialty Badges
  */
-  export async function getAllTimeLeaderboard(): Promise<AllTimeLeaderboardRow[]> {
+export async function getAllTimeLeaderboard(): Promise<AllTimeLeaderboardRow[]> {
   const group = await getActiveGroup();
   const todaySast = getLocalDateString(new Date(), group.timezone);
   const yesterdaySast = getOffsetDateString(-1, new Date(), group.timezone);
@@ -829,29 +916,55 @@ export async function getDailyLeaderboard(
   ensureLocalStoreInitialized();
   if (typeof window === "undefined") return [];
 
-  let submissions = JSON.parse(
-    localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
-  ) as Submission[];
-  const profiles = await getAllProfiles();
+  let submissions: Submission[] = [];
+  const profileMap = new Map<string, { display_name: string; avatar_color: string }>();
 
   const sb = getSupabaseBrowserClient();
-  if (sb) {
+  if (sb && isSupabaseConfigured()) {
     try {
-      const { data: remoteSubs } = await sb.from("submissions").select("*");
-      if (remoteSubs && remoteSubs.length > 0) {
-        const mergedMap = new Map<string, Submission>();
-        for (const s of submissions) {
-          mergedMap.set(`${s.user_id}_${s.game_id}_${s.play_date}`, s);
+      const [{ data: remoteSubs }, { data: viewRows }, { data: remoteProfiles }] =
+        await Promise.all([
+          sb.from("submissions").select("*"),
+          sb.from("all_time_leaderboard").select("*"),
+          sb.from("profiles").select("*"),
+        ]);
+
+      submissions = (remoteSubs as Submission[]) || [];
+
+      if (viewRows) {
+        for (const vr of viewRows) {
+          profileMap.set(vr.user_id, {
+            display_name: vr.display_name || "Player",
+            avatar_color: vr.avatar_color || "#1D2D44",
+          });
         }
-        for (const rs of remoteSubs as Submission[]) {
-          mergedMap.set(`${rs.user_id}_${rs.game_id}_${rs.play_date}`, rs);
+      }
+      if (remoteProfiles) {
+        for (const rp of remoteProfiles) {
+          if (rp.display_name) {
+            profileMap.set(rp.id, {
+              display_name: rp.display_name,
+              avatar_color: rp.avatar_color || "#1D2D44",
+            });
+          }
         }
-        submissions = Array.from(mergedMap.values());
       }
     } catch {
-      // Fallback to local submissions
+      submissions = [];
+    }
+  } else {
+    submissions = JSON.parse(
+      localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
+    ) as Submission[];
+    const localProfiles = await getAllProfiles();
+    for (const lp of localProfiles) {
+      profileMap.set(lp.id, {
+        display_name: lp.display_name,
+        avatar_color: lp.avatar_color,
+      });
     }
   }
+
   const games = await getGames(true);
 
   // Refinement 2: Compute Daily Crowns ONLY for completed days (play_date < todaySast)
@@ -869,7 +982,6 @@ export async function getDailyLeaderboard(
     }
   }
 
-  // Compute per-game best average specialist across users (min 2 plays)
   const gameLeaderByGameId = new Map<string, { userId: string; avg: number; gameName: string }>();
   for (const game of games) {
     const subsForGame = submissions.filter((s) => s.game_id === game.id);
@@ -899,7 +1011,6 @@ export async function getDailyLeaderboard(
     }
   }
 
-  // Aggregate all-time metrics per user
   const userSubsMap = new Map<string, Submission[]>();
   for (const sub of submissions) {
     const arr = userSubsMap.get(sub.user_id) || [];
@@ -910,13 +1021,9 @@ export async function getDailyLeaderboard(
   const unranked: Omit<AllTimeLeaderboardRow, "all_time_rank">[] = [];
 
   for (const [userId, userSubs] of userSubsMap.entries()) {
-    const profile = profiles.find((p) => p.id === userId) || {
-      id: userId,
+    const pInfo = profileMap.get(userId) || {
       display_name: "Player",
-      avatar_color: "#1D4ED8",
-      group_id: group.id,
-      invite_code: group.invite_code,
-      role: "member",
+      avatar_color: "#1D2D44",
     };
 
     const totalGamesLogged = userSubs.length;
@@ -933,7 +1040,6 @@ export async function getDailyLeaderboard(
     const winRatePct =
       totalGamesLogged > 0 ? Math.round((nonFailedCount / totalGamesLogged) * 100) : 0;
 
-    // Calculate Active Streak (consecutive days ending on todaySast or yesterdaySast)
     const dateSet = new Set(distinctDates);
     let streak = 0;
     let cursorOffset = dateSet.has(todaySast) ? 0 : dateSet.has(yesterdaySast) ? -1 : null;
@@ -949,7 +1055,6 @@ export async function getDailyLeaderboard(
       }
     }
 
-    // Build Specialty Badges
     const badges: SpecialtyBadge[] = [];
     for (const [, leader] of gameLeaderByGameId.entries()) {
       if (leader.userId === userId) {
@@ -978,8 +1083,8 @@ export async function getDailyLeaderboard(
     unranked.push({
       group_id: group.id,
       user_id: userId,
-      display_name: profile.display_name,
-      avatar_color: profile.avatar_color,
+      display_name: pInfo.display_name,
+      avatar_color: pInfo.avatar_color,
       total_games_logged: totalGamesLogged,
       days_active: daysActive,
       cumulative_normalized_score: cumulativeScore,
@@ -1009,6 +1114,48 @@ export async function getDailyLeaderboard(
 }
 
 export async function getAuditLogs(): Promise<SubmissionAuditLog[]> {
+  const sb = getSupabaseBrowserClient();
+  if (sb && isSupabaseConfigured()) {
+    try {
+      const [{ data: logs }, { data: games }, profiles] = await Promise.all([
+        sb
+          .from("submission_audit_logs")
+          .select("*, submissions(game_id)")
+          .order("changed_at", { ascending: false })
+          .limit(25),
+        sb.from("games").select("id, name"),
+        getAllProfiles(),
+      ]);
+
+      if (logs) {
+        const gameMap = new Map<string, string>();
+        games?.forEach((g: { id: string; name: string }) => gameMap.set(g.id, g.name));
+        const profMap = new Map<string, string>();
+        profiles.forEach((p) => profMap.set(p.id, p.display_name));
+
+        return logs.map((l: Record<string, unknown>) => {
+          const subObj = l.submissions as { game_id?: string } | null;
+          return {
+            id: String(l.id),
+            submission_id: String(l.submission_id),
+            user_id: String(l.user_id),
+            display_name: profMap.get(String(l.user_id)) || "Player",
+            game_name: (subObj?.game_id && gameMap.get(subObj.game_id)) || "Game",
+            previous_raw_score: l.previous_raw_score as number | null,
+            previous_is_failed: Boolean(l.previous_is_failed),
+            previous_normalized_score: Number(l.previous_normalized_score),
+            new_raw_score: l.new_raw_score as number | null,
+            new_is_failed: Boolean(l.new_is_failed),
+            new_normalized_score: Number(l.new_normalized_score),
+            changed_at: String(l.changed_at),
+          };
+        });
+      }
+    } catch {
+      return [];
+    }
+  }
+
   ensureLocalStoreInitialized();
   if (typeof window === "undefined") return [];
   return JSON.parse(
@@ -1016,9 +1163,6 @@ export async function getAuditLogs(): Promise<SubmissionAuditLog[]> {
   ) as SubmissionAuditLog[];
 }
 
-/**
- * Simulates a friend logging a live game score right now (Demo Helper for testing Realtime rank shifts)
- */
 export async function simulateFriendLiveSubmission(): Promise<{
   friendName: string;
   gameName: string;
@@ -1033,56 +1177,19 @@ export async function simulateFriendLiveSubmission(): Promise<{
     profiles.filter((p) => p.id !== currentUser.id).length > 0
       ? profiles.filter((p) => p.id !== currentUser.id)
       : SEED_PROFILES.slice(1);
-  const subs = JSON.parse(
-    localStorage.getItem(STORAGE_KEYS.SUBMISSIONS) || "[]"
-  ) as Submission[];
-
-  // Find a friend who hasn't completed one of today's games yet, or pick random friend/game
-  for (const friend of friends) {
-    for (const game of games) {
-      const hasPlayed = subs.some(
-        (s) => s.user_id === friend.id && s.game_id === game.id && s.play_date === today
-      );
-      if (!hasPlayed) {
-        let rawScore = 3;
-        if (game.slug === "wordle") rawScore = Math.floor(Math.random() * 4) + 2; // 2..5
-        else if (game.slug === "word500") rawScore = Math.floor(Math.random() * 5) + 2; // 2..6
-        else if (game.slug === "krillion") rawScore = Math.floor(Math.random() * 280) + 380; // 380..660
-        else rawScore = Math.round((game.min_score + game.max_score) / 2);
-
-        const res = await submitScore({
-          gameId: game.id,
-          rawScore,
-          isFailed: false,
-          playDate: today,
-          userId: friend.id,
-        });
-
-        return {
-          friendName: friend.display_name,
-          gameName: game.name,
-          normalizedScore: res.submission?.normalized_score || 0,
-        };
-      }
-    }
-  }
-
-  // If all friends have finished all games, simulate an improved edit from Zanele or Liam
-  const targetFriend = friends[Math.floor(Math.random() * friends.length)];
-  const krillion = games.find((g) => g.slug === "krillion") || games[0];
-  const newScore = krillion.slug === "krillion" ? Math.floor(Math.random() * 150) + 540 : 2;
+  const targetFriend = friends[0];
+  const game = games[0];
   const res = await submitScore({
-    gameId: krillion.id,
-    rawScore: newScore,
+    gameId: game.id,
+    rawScore: 3,
     isFailed: false,
     playDate: today,
     userId: targetFriend.id,
   });
-
   return {
     friendName: targetFriend.display_name,
-    gameName: krillion.name,
-    normalizedScore: res.submission?.normalized_score || 0,
+    gameName: game.name,
+    normalizedScore: res.submission?.normalized_score || 80,
   };
 }
 
@@ -1107,11 +1214,6 @@ export async function seedSampleFriends(): Promise<void> {
 const realtimeSubscribers = new Set<() => void>();
 let sharedRealtimeChannelInitialized = false;
 
-/**
- * Subscribes to Realtime changes on the `submissions` base table (Refinement 1)
- * using a multiplexed singleton channel (preventing duplicate `.on()` after `.subscribe()`)
- * AND local BroadcastChannel / CustomEvent for zero-latency cross-tab updates.
- */
 export function subscribeToLeaderboardUpdates(onUpdate: () => void): () => void {
   const cleanups: Array<() => void> = [];
 
@@ -1120,7 +1222,6 @@ export function subscribeToLeaderboardUpdates(onUpdate: () => void): () => void 
     realtimeSubscribers.delete(onUpdate);
   });
 
-  // 1. Supabase Realtime CDC on base `submissions` table (never on SQL VIEWs)
   const sb = getSupabaseBrowserClient();
   if (sb && isSupabaseConfigured() && !sharedRealtimeChannelInitialized) {
     sharedRealtimeChannelInitialized = true;
@@ -1145,7 +1246,6 @@ export function subscribeToLeaderboardUpdates(onUpdate: () => void): () => void 
     }
   }
 
-  // 2. Local window event + Cross-tab BroadcastChannel
   if (typeof window !== "undefined") {
     const handleWindowUpdate = () => onUpdate();
     window.addEventListener("wgl-realtime-update", handleWindowUpdate);
@@ -1168,4 +1268,3 @@ export function subscribeToLeaderboardUpdates(onUpdate: () => void): () => void 
     cleanups.forEach((fn) => fn());
   };
 }
-

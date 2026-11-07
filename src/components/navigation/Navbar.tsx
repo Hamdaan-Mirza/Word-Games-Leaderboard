@@ -240,6 +240,23 @@ export function Navbar() {
               )}
             </button>
 
+            {user && isLiveSupabase && (
+              <Link
+                href="/login"
+                className="flex min-h-[48px] items-center gap-2 rounded-lg border-2 border-wcag-border bg-wcag-elevated px-3 py-1.5 text-sm font-bold text-wcag-text transition-colors hover:border-palette-shadow"
+                title="View or edit your display name and profile"
+              >
+                <span
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/30 text-xs font-extrabold text-white"
+                  style={{ backgroundColor: user.avatar_color }}
+                  aria-hidden="true"
+                >
+                  {user.display_name.charAt(0).toUpperCase()}
+                </span>
+                <span className="max-w-[120px] truncate">{user.display_name}</span>
+              </Link>
+            )}
+
             {user && !isLiveSupabase && profiles.length > 0 && (
               <div className="flex items-center gap-2">
                 <label htmlFor="persona-select" className="sr-only">

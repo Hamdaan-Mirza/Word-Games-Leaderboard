@@ -70,7 +70,7 @@ describe("End-to-End Repository & Leaderboard Flows", () => {
     expect(group.invite_code).toBe("WORDS2026");
 
     const user = await getCurrentUser();
-    expect(user.display_name).toBe("You (Alex)");
+    expect(user.display_name).toBe("Player 1");
 
     const profiles = await getAllProfiles();
     expect(profiles.length).toBeGreaterThanOrEqual(5);

@@ -12,7 +12,6 @@ import {
   getCurrentUser,
   getDailyLeaderboard,
   getGames,
-  simulateFriendLiveSubmission,
   subscribeToLeaderboardUpdates,
 } from "@/lib/supabase/repository";
 import { getLocalDateString, getOffsetDateString } from "@/lib/timezone";
@@ -26,7 +25,6 @@ export default function LeaderboardPage() {
   const [games, setGames] = useState<GameConfig[]>([]);
   const [dailyRows, setDailyRows] = useState<DailyLeaderboardRow[]>([]);
   const [allTimeRows, setAllTimeRows] = useState<AllTimeLeaderboardRow[]>([]);
-  const [liveMsg, setLiveMsg] = useState("");
 
   const availableDates = [
     { date: todaySast, label: "Today — SAST" },
@@ -56,14 +54,6 @@ export default function LeaderboardPage() {
     return () => unsub();
   }, [loadStandings]);
 
-  const handleSimulate = async () => {
-    const sim = await simulateFriendLiveSubmission();
-    setLiveMsg(
-      `${sim.friendName} logged ${sim.gameName} (+${sim.normalizedScore.toFixed(2)} pts)`
-    );
-    await loadStandings();
-  };
-
   return (
     <div className="space-y-8">
       <div>
@@ -88,10 +78,7 @@ export default function LeaderboardPage() {
         availableDates={availableDates}
         onSelectDate={setSelectedDate}
         rankChangeDeltas={{}}
-        liveAnnouncement={liveMsg}
-        onSimulateFriend={
-          selectedDate === todaySast ? handleSimulate : undefined
-        }
+        liveAnnouncement=""
       />
     </div>
   );
